@@ -1,0 +1,56 @@
+user_id,name,email,age,city,phone,status,signup_date
+U001,Wakeeta Toor,bad@,32.0,Ranchi,00885712054,active,2025-02-25
+U002,Manan Sandhu,hemanginivarkey@example.com,,Baranagar,08664071020,active,2026-03-31
+U003,,uppalfrado@example.com,53.0,Patiala,6433631090,pending,2024-12-10
+U004,Ridhi Ahluwalia,devbumb@example.org,18.0,Katni,+911809144160,active,2025-07-03
+U005,Yachana Doshi,pavani33@example.org,39.0,Rewa,00529626457,inactive,2026-05-29
+U006,,manbir01@example.net,20.0,Cuttack,08056106537,pending,2025-09-20
+U007,Ryan Sastry,jeremiahsarin@example.org,,Bhimavaram,4259124343,pending,2026-03-20
+U008,Owen Gaba,ranveer31@example.net,22.0,,4886962327,active,2026-03-03
+U009,Lohit Ratti,avni60@example.org,24.0,Bathinda,5660406187,inactive,2025-04-16
+U010,Turvi Dua,lagrawal@example.net,31.0,Singrauli,06290619576,active,2026-01-08
+U011,Baljiwan Virk,dkapoor@example.com,28.0,Jalna,08785756223,active,2024-11-15
+U012,Fariq Salvi,rayaanaurora@example.org,38.0,Aurangabad,07400748886,active,2026-01-06
+U013,Jhalak Chana,bad@,35.0,,+911201328864,pending,2025-02-12
+U014,Maanav Guha,lde@example.net,43.0,Amroha,04084004498,inactive,2026-03-02
+U015,Mason Kant,bad@,52.0,Rourkela,2810107739,pending,2025-02-17
+U016,Ira Peri,xmital@example.net,26.0,Secunderabad,03768900092,active,2026-02-09
+U017,Noah Yogi,fshetty@example.org,28.0,Jammu,+914859150324,inactive,2026-01-26
+U018,Forum Rajagopalan,anvisankaran@example.net,47.0,Nadiad,00255442249,pending,2025-06-28
+U019,Samaksh Kashyap,bad@,52.0,Amaravati,9101115453,active,2025-01-18
+U020,Chaitanya Patla,mohinilanka@example.com,34.0,Berhampore,5528614722,active,2025-01-21
+U021,Neelima Nagi,bad@,58.0,Motihari,+917551801761,active,2026-04-13
+U022,Amol Ganguly,nborah@example.com,51.0,Sambalpur,+911145750217,pending,2024-07-16
+U023,Gaurang Bandi,bad@,37.0,Guwahati,04710418749,active,2024-07-31
+U024,Anusha Agate,obora@example.com,,Kolkata,5960218589,active,2024-08-14
+U025,Ladli Seth,pranitkhurana@example.com,60.0,Chandrapur,01750983701,pending,2025-09-23
+U026,Pushti Mitter,qgade@example.org,31.0,Tiruppur,8885532621,active,2026-03-11
+U027,Dalaja Oza,qadimdani@example.net,41.0,Firozabad,9128657755,pending,2026-01-31
+U028,Jagvi Johal,rushilrajagopal@example.net,,,9911568819,pending,2024-11-12
+U029,Manbir Nigam,balhaarbarad@example.org,,Bhiwani,7804130727,active,2025-11-21
+U030,,bad@,50.0,Ongole,+911234597989,inactive,2024-09-28
+U031,Aayush Dugar,bad@,54.0,Chittoor,2791797302,active,2025-04-21
+U032,Netra Srivastava,dbhasin@example.com,24.0,Tiruvottiyur,7405718979,active,2026-01-31
+U033,Aditya Sastry,gdyal@example.com,59.0,Dindigul,01914594728,active,2026-04-21
+U034,,kandabaghyawati@example.net,24.0,Tirupati,04066960100,active,2025-06-21
+U035,Ranveer Viswanathan,bad@,47.0,Bidhannagar,+913125919844,active,2025-01-21
+U036,Rachana Kashyap,osami@example.com,21.0,Hyderabad,+911070665822,pending,2024-06-27
+U037,Vincent Basu,yash69@example.com,33.0,Bulandshahr,+913881066173,inactive,2025-06-10
+U038,Adya Mahal,jasmit54@example.net,28.0,Bijapur,02130126034,inactive,2024-08-09
+U039,Jyoti Ravi,nigamqushi@example.com,45.0,Pallavaram,05793396284,pending,2026-01-04
+U040,Rudra Rau,manderdivya@example.org,31.0,Jamalpur,1476977773,pending,2024-09-01
+U041,Janya Narang,bad@,21.0,Kirari Suleman Nagar,07416620105,pending,2025-01-15
+U042,Falak Das,yutika03@example.net,,Junagadh,+910187451644,active,2024-09-07
+U043,,bad@,43.0,Sri Ganganagar,04055266359,pending,2026-02-17
+U044,Mekhala Karpe,mannjack@example.com,44.0,Sonipat,02031326144,pending,2024-11-09
+U045,Ojasvi Kar,kamya97@example.org,38.0,Kishanganj,3437674076,inactive,2024-10-17
+U046,Abhiram Gulati,jackson12@example.com,22.0,,08528418810,pending,2026-05-14
+U047,Umang Om,toorchandani@example.net,,Bidar,5759113805,active,2025-07-31
+U048,Jagdish Memon,obadal@example.com,,Chittoor,6711627005,active,2025-08-28
+U049,Manan Kade,krishmahika@example.org,57.0,Munger,6255736032,pending,2025-02-22
+U050,,vedhikadara@example.com,60.0,Gangtok,5133398590,active,2025-10-02
+U009,Lohit Ratti,avni60@example.org,24.0,Bathinda,5660406187,inactive,2025-04-16
+U004,Ridhi Ahluwalia,devbumb@example.org,18.0,Katni,+911809144160,active,2025-07-03
+U004,Ridhi Ahluwalia,devbumb@example.org,18.0,Katni,+911809144160,active,2025-07-03
+U018,Forum Rajagopalan,anvisankaran@example.net,47.0,Nadiad,00255442249,pending,2025-06-28
+U005,Yachana Doshi,pavani33@example.org,39.0,Rewa,00529626457,inactive,2026-05-29
