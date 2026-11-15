@@ -1,0 +1,21 @@
+{
+    "record_counts": {
+        "users_raw": 55,
+        "users_clean": 50,
+        "orders_raw": 80,
+        "orders_clean": 80,
+        "products": 10
+    },
+    "data_quality": {
+        "missing_user_values": 18,
+        "duplicate_users": 5,
+        "invalid_emails": 11,
+        "missing_or_invalid_order_amounts": 6,
+        "orphan_orders": 6
+    },
+    "cleaning_actions": {
+        "nulls_fixed": 18,
+        "dups_removed": 5,
+        "invalid_fixed": 11
+    }
+}
