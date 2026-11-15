@@ -1,112 +1,252 @@
-import pandas as pd
-from rich.console import Console
 
-console = Console()
+import pandas as pd
+
+from config.logging_config import setup_logger
+
+logger = setup_logger()
+
 
 def clean_users(df):
-    """Clean and fix dirty user data"""
-    console.log("[yellow][CLEAN][/yellow] Starting data quality checks on users...")
+    """Clean and fix dirty user data."""
 
-    original_count = len(df)
-    report = {"nulls_fixed": 0, "dups_removed": 0, "invalid_fixed": 0}
+    logger.info("Starting user data quality checks.")
 
-    # 1. Remove duplicates
-    df = df.drop_duplicates(subset=["user_id", "email"])
-    report["dups_removed"] = original_count - len(df)
-    if report["dups_removed"] > 0:
-        console.log(f"[yellow]⚠ Removed {report['dups_removed']} duplicate rows[/yellow]")
+    try:
+        df = df.copy()
+        original_count = len(df)
 
-    # 2. Fix blank/null names
-    blank_names = df["name"].isna() | (df["name"].str.strip() == "")
-    df.loc[blank_names, "name"] = "Unknown User"
-    report["nulls_fixed"] += int(blank_names.sum())
-    if blank_names.sum() > 0:
-        console.log(f"[yellow]⚠ Fixed {blank_names.sum()} blank names → 'Unknown User'[/yellow]")
+        report = {
+            "nulls_fixed": 0,
+            "dups_removed": 0,
+            "invalid_fixed": 0
+        }
 
-    # 3. Strip whitespace from names
-    df["name"] = df["name"].str.strip()
+        # 1. Remove duplicates
+        df = df.drop_duplicates(subset=["user_id", "email"])
 
-    # 4. Fix invalid emails
-    invalid_email = df["email"].isna() | ~df["email"].str.contains(r'^[^@]+@[^@]+\.[^@]+', na=False)
-    df.loc[invalid_email, "email"] = df.loc[invalid_email, "user_id"].str.lower() + "@unknown.com"
-    report["invalid_fixed"] += int(invalid_email.sum())
-    if invalid_email.sum() > 0:
-        console.log(f"[yellow]⚠ Fixed {invalid_email.sum()} invalid emails[/yellow]")
+        report["dups_removed"] = original_count - len(df)
 
-    # 5. Fix null/invalid ages
-    df["age"] = pd.to_numeric(df["age"], errors='coerce')
-    bad_age = df["age"].isna() | (df["age"] < 0) | (df["age"] > 120)
-    median_age = df["age"].median()
-    df.loc[bad_age, "age"] = median_age
-    df["age"] = df["age"].fillna(25).astype(int)
-    report["nulls_fixed"] += int(bad_age.sum())
+        logger.info(
+            "Duplicate user records removed: %d",
+            report["dups_removed"]
+        )
 
-    # 6. Fix null cities
-    null_city = df["city"].isna()
-    df.loc[null_city, "city"] = "Unknown"
-    report["nulls_fixed"] += int(null_city.sum())
+        # 2. Fix blank/null names
+        blank_names = (
+            df["name"].isna()
+            | df["name"].astype("string").str.strip().eq("").fillna(False)
+        )
 
-    console.log(f"[green]✓ Cleaning done — {len(df)} clean rows remaining[/green]")
-    return df, report
+        df.loc[blank_names, "name"] = "Unknown User"
+
+        report["nulls_fixed"] += int(blank_names.sum())
+
+        # 3. Strip whitespace from names
+        df["name"] = df["name"].astype("string").str.strip()
+
+        # 4. Fix invalid emails
+        invalid_email = (
+            df["email"].isna()
+            | ~df["email"].astype("string").str.contains(
+                r"^[^@\s]+@[^@\s]+\.[^@\s]+$",
+                na=False
+            )
+        )
+
+        df.loc[invalid_email, "email"] = (
+            df.loc[invalid_email, "user_id"].astype(str).str.lower()
+            + "@unknown.com"
+        )
+
+        report["invalid_fixed"] += int(invalid_email.sum())
+
+        # 5. Fix null/invalid ages
+        df["age"] = pd.to_numeric(
+            df["age"],
+            errors="coerce"
+        ).astype("float64")
+
+        bad_age = (
+            df["age"].isna()
+            | (df["age"] < 0)
+            | (df["age"] > 120)
+        )
+
+        median_age = df.loc[~bad_age, "age"].median()
+
+        if pd.isna(median_age):
+            median_age = 25
+
+        df.loc[bad_age, "age"] = round(median_age)
+
+        df["age"] = df["age"].fillna(25).astype(int)
+
+        report["nulls_fixed"] += int(bad_age.sum())
+
+        # 6. Fix null cities
+        null_city = df["city"].isna()
+
+        df.loc[null_city, "city"] = "Unknown"
+
+        report["nulls_fixed"] += int(null_city.sum())
+
+        logger.info(
+            "User cleaning completed. Records: %d | Report: %s",
+            len(df),
+            report
+        )
+
+        return df, report
+
+    except Exception:
+        logger.exception("User data cleaning failed.")
+        raise
+
 
 def clean_orders(df, valid_user_ids):
-    """Clean order data"""
-    console.log("[yellow][CLEAN][/yellow] Cleaning orders...")
+    """Clean order data and flag orphan records."""
 
-    # Fix null amounts
-    null_amounts = df["amount"].isna()
-    df.loc[null_amounts, "amount"] = 0.0
-    if null_amounts.sum() > 0:
-        console.log(f"[yellow]⚠ Fixed {null_amounts.sum()} null amounts → 0.0[/yellow]")
+    logger.info("Starting order data cleaning.")
 
-    # Flag orphan orders
-    df["is_orphan"] = ~df["user_id"].isin(valid_user_ids)
-    orphans = df["is_orphan"].sum()
-    if orphans > 0:
-        console.log(f"[yellow]⚠ Flagged {orphans} orphan orders (unknown user_id)[/yellow]")
+    try:
+        df = df.copy()
 
-    console.log(f"[green]✓ Orders cleaned — {len(df)} rows[/green]")
-    return df
+        # Fix null amounts
+        df["amount"] = pd.to_numeric(
+            df["amount"],
+            errors="coerce"
+        )
+
+        null_amounts = df["amount"].isna()
+
+        df.loc[null_amounts, "amount"] = 0.0
+
+        # Flag orphan orders
+        df["is_orphan"] = ~df["user_id"].isin(valid_user_ids)
+
+        orphans = int(df["is_orphan"].sum())
+
+        logger.info(
+            "Order cleaning completed. Rows: %d | "
+            "Null amounts fixed: %d | Orphan orders: %d",
+            len(df),
+            int(null_amounts.sum()),
+            orphans
+        )
+
+        return df
+
+    except Exception:
+        logger.exception("Order data cleaning failed.")
+        raise
+
 
 def transform_users(df):
-    """Add derived/transformed columns to users"""
-    console.log("[blue][TRANSFORM][/blue] Applying business transformations...")
+    """Add derived columns to users."""
 
-    df["segment"] = pd.cut(
-        df["age"],
-        bins=[0, 24, 34, 120],
-        labels=["Youth", "Adult", "Senior"]
-    ).astype(str)
+    logger.info("Starting user transformations.")
 
-    df["email_domain"] = df["email"].str.split("@").str[1]
-    df["is_premium"] = (df["status"] == "active") & (df["age"] > 25)
-    df["status"] = df["status"].str.upper()
-    df["etl_loaded_at"] = pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")
+    try:
+        df = df.copy()
 
-    console.log("[green]✓ Added: segment, email_domain, is_premium, status(normalized), etl_loaded_at[/green]")
-    return df
+        df["segment"] = pd.cut(
+            df["age"],
+            bins=[0, 24, 34, 120],
+            labels=["Youth", "Adult", "Senior"]
+        ).astype(str)
+
+        df["email_domain"] = df["email"].str.split("@").str[1]
+
+        df["is_premium"] = (
+            (df["status"].str.lower() == "active")
+            & (df["age"] > 25)
+        )
+
+        df["status"] = df["status"].str.upper()
+
+        df["etl_loaded_at"] = (
+            pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")
+        )
+
+        logger.info(
+            "User transformations completed. Rows: %d",
+            len(df)
+        )
+
+        return df
+
+    except Exception:
+        logger.exception("User transformation failed.")
+        raise
+
 
 def transform_orders(df):
-    """Transform orders — add derived columns"""
-    console.log("[blue][TRANSFORM][/blue] Transforming orders...")
+    """Add derived columns to orders."""
 
-    df["amount"] = df["amount"].round(2)
-    df["order_year"] = pd.to_datetime(df["order_date"], errors='coerce').dt.year
-    df["order_month"] = pd.to_datetime(df["order_date"], errors='coerce').dt.month
-    df["etl_loaded_at"] = pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")
+    logger.info("Starting order transformations.")
 
-    console.log("[green]✓ Added: order_year, order_month, etl_loaded_at[/green]")
-    return df
+    try:
+        df = df.copy()
+
+        df["amount"] = df["amount"].round(2)
+
+        order_dates = pd.to_datetime(
+            df["order_date"],
+            errors="coerce"
+        )
+
+        df["order_year"] = order_dates.dt.year
+        df["order_month"] = order_dates.dt.month
+
+        df["etl_loaded_at"] = (
+            pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")
+        )
+
+        invalid_dates = int(order_dates.isna().sum())
+
+        logger.info(
+            "Order transformations completed. Rows: %d | Invalid dates: %d",
+            len(df),
+            invalid_dates
+        )
+
+        return df
+
+    except Exception:
+        logger.exception("Order transformation failed.")
+        raise
+
 
 def build_summary(users_df, orders_df, products_df):
-    """Build a pipeline summary/audit table"""
-    console.log("[blue][TRANSFORM][/blue] Building summary table...")
+    """Build a pipeline summary/audit table."""
 
-    summary = pd.DataFrame([
-        {"table_name": "users",    "row_count": len(users_df),    "loaded_at": str(pd.Timestamp.now())},
-        {"table_name": "orders",   "row_count": len(orders_df),   "loaded_at": str(pd.Timestamp.now())},
-        {"table_name": "products", "row_count": len(products_df), "loaded_at": str(pd.Timestamp.now())},
-    ])
+    logger.info("Building ETL summary table.")
 
-    console.log("[green]✓ Summary table built[/green]")
-    return summary
+    try:
+        loaded_at = str(pd.Timestamp.now())
+
+        summary = pd.DataFrame([
+            {
+                "table_name": "users",
+                "row_count": len(users_df),
+                "loaded_at": loaded_at
+            },
+            {
+                "table_name": "orders",
+                "row_count": len(orders_df),
+                "loaded_at": loaded_at
+            },
+            {
+                "table_name": "products",
+                "row_count": len(products_df),
+                "loaded_at": loaded_at
+            }
+        ])
+
+        logger.info("ETL summary table created successfully.")
+
+        return summary
+
+    except Exception:
+        logger.exception("Failed to build ETL summary.")
+        raise

@@ -1,45 +1,128 @@
-import pandas as pd
-import json
-from rich.console import Console
 
-console = Console()
+import json
+import pandas as pd
+import requests
+
+from config.logging_config import setup_logger
+
+logger = setup_logger()
+
+PRODUCTS_API_URL = "https://dummyjson.com/products"
+
 
 def extract_csv(filepath):
-    """Extract data from a CSV file"""
-    console.log(f"[blue][EXTRACT][/blue] Reading CSV: {filepath}")
-    df = pd.read_csv(filepath)
-    console.log(f"[green]✓ CSV loaded — {len(df)} rows, {len(df.columns)} columns[/green]")
-    return df
+    """Extract user data from CSV."""
+
+    logger.info("Reading CSV source: %s", filepath)
+
+    try:
+        df = pd.read_csv(filepath)
+
+        logger.info(
+            "CSV extraction successful: %d rows, %d columns.",
+            len(df),
+            len(df.columns)
+        )
+
+        return df
+
+    except Exception:
+        logger.exception("Failed to extract CSV: %s", filepath)
+        raise
+
 
 def extract_json(filepath):
-    """Extract data from a JSON file"""
-    console.log(f"[blue][EXTRACT][/blue] Reading JSON: {filepath}")
-    with open(filepath, 'r') as f:
-        data = json.load(f)
-    df = pd.DataFrame(data)
-    console.log(f"[green]✓ JSON loaded — {len(df)} rows[/green]")
-    return df
+    """Extract order data from JSON."""
+
+    logger.info("Reading JSON source: %s", filepath)
+
+    try:
+        with open(filepath, "r", encoding="utf-8") as file:
+            data = json.load(file)
+
+        df = pd.DataFrame(data)
+
+        logger.info(
+            "JSON extraction successful: %d rows.",
+            len(df)
+        )
+
+        return df
+
+    except Exception:
+        logger.exception("Failed to extract JSON: %s", filepath)
+        raise
+
 
 def extract_api():
-    """Simulate a REST API call for product data"""
-    console.log("[blue][EXTRACT][/blue] Calling Products API...")
+    """Extract real product data from DummyJSON REST API."""
 
-    mock_api_response = [
-        {"product_id": f"P{i:02d}", "name": name, "category": cat, "price": price, "stock": stock}
-        for i, (name, cat, price, stock) in enumerate([
-            ("Laptop Stand",       "Electronics", 1299,  45),
-            ("Mechanical Keyboard","Electronics", 3499,  80),
-            ("27\" Monitor",       "Electronics", 18999, 20),
-            ("Wireless Mouse",     "Electronics", 999,  150),
-            ("USB-C Hub",          "Electronics", 2499,  60),
-            ("Webcam HD",          "Electronics", 4999,  35),
-            ("Desk Lamp",          "Accessories", 799,  200),
-            ("Mousepad XL",        "Accessories", 499,  300),
-            ("Cable Organizer",    "Accessories", 299,  400),
-            ("Laptop Bag",         "Accessories", 1999,  90),
-        ], 1)
-    ]
+    logger.info("Starting real Products API extraction.")
 
-    df = pd.DataFrame(mock_api_response)
-    console.log(f"[green]✓ API response — {len(df)} products fetched[/green]")
-    return df
+    try:
+        response = requests.get(
+            PRODUCTS_API_URL,
+            params={"limit": 10},
+            timeout=15
+        )
+
+        response.raise_for_status()
+
+        data = response.json()
+
+        if not isinstance(data, dict) or "products" not in data:
+            raise ValueError("Unexpected API response structure.")
+
+        products = data["products"]
+
+        if not isinstance(products, list) or not products:
+            raise ValueError("API returned no valid products.")
+
+        df = pd.DataFrame(products)
+
+        required_columns = [
+            "id",
+            "title",
+            "category",
+            "price",
+            "stock"
+        ]
+
+        missing_columns = [
+            column for column in required_columns
+            if column not in df.columns
+        ]
+
+        if missing_columns:
+            raise ValueError(
+                f"Missing API fields: {missing_columns}"
+            )
+
+        # Standardize API fields to match our ETL database schema
+        df = df.rename(columns={
+            "id": "product_id",
+            "title": "name"
+        })
+
+        df = df[
+            ["product_id", "name", "category", "price", "stock"]
+        ].copy()
+
+        df["price"] = pd.to_numeric(
+            df["price"], errors="raise"
+        )
+
+        df["stock"] = pd.to_numeric(
+            df["stock"], errors="raise"
+        )
+
+        logger.info(
+            "Real API extraction successful: %d products.",
+            len(df)
+        )
+
+        return df
+
+    except Exception:
+        logger.exception("Products API extraction failed.")
+        raise

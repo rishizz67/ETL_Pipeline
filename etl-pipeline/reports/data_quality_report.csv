@@ -1,0 +1,14 @@
+category,metric,value
+record_counts,users_raw,55
+record_counts,users_clean,50
+record_counts,orders_raw,80
+record_counts,orders_clean,80
+record_counts,products,10
+data_quality,missing_user_values,18
+data_quality,duplicate_users,5
+data_quality,invalid_emails,11
+data_quality,missing_or_invalid_order_amounts,6
+data_quality,orphan_orders,6
+cleaning_actions,nulls_fixed,18
+cleaning_actions,dups_removed,5
+cleaning_actions,invalid_fixed,11
